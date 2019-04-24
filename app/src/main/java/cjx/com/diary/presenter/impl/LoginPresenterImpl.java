@@ -1,18 +1,23 @@
 package cjx.com.diary.presenter.impl;
 
+import android.app.Activity;
 import android.content.Context;
-import android.text.TextUtils;
 
-import org.greenrobot.greendao.query.QueryBuilder;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.List;
-
-import cjx.com.diary.base.BaseActivity;
-import cjx.com.diary.base.MyApplication;
-import cjx.com.diary.mode.user.UserBean;
-import cjx.com.diary.mode.user.UserBeanDao;
+import bear.com.data.repository.UserRepositoryImpl;
+import bear.com.data.repository.api.RouteImpl;
+import bear.com.data.repository.converter.UserModelconverterImpl;
+import bear.com.data.repository.db.database.DiaryDataBase;
+import bear.com.domain.cases.userCase.LoginCase;
+import bear.com.domain.cases.userCase.LogoutCase;
+import bear.com.domain.model.User;
+import bear.com.domain.repository.Response;
+import cjx.com.diary.base.BaseView;
 import cjx.com.diary.presenter.LoginPresenter;
 import cjx.com.diary.util.Utils;
+import cjx.com.diary.view.activity.RegisterActivity;
 
 /**
  * Created by bear on 2017/4/17.
@@ -20,35 +25,40 @@ import cjx.com.diary.util.Utils;
 
 public class LoginPresenterImpl extends MyPresenterImpl implements LoginPresenter {
 
+    private LoginCase mLoginCase;
+    private LogoutCase mLogoutCase;
+
+    @Override
+    public void bindView(BaseView view, Object o) {
+        super.bindView(view, o);
+        mLoginCase = new LoginCase();
+        mLogoutCase = new LogoutCase();
+        mLoginCase.setUserRepository(new UserRepositoryImpl(DiaryDataBase.getInstance((Context) view), new RouteImpl(), new UserModelconverterImpl()));
+        mLogoutCase.setUserRepository(new UserRepositoryImpl(DiaryDataBase.getInstance((Context) view), new RouteImpl(), new UserModelconverterImpl()));
+    }
+
     @Override
     public void login(String account, String psd) {
-        UserBeanDao userBeanDao= MyApplication.INSTANCE.getDaoSession().getUserBeanDao();
-        QueryBuilder<UserBean> query = userBeanDao.queryBuilder();
-
-        List<UserBean> userBeanList=query.where(UserBeanDao.Properties.Account.eq(account)).list();
-        if(userBeanList!=null&&userBeanList.size()>0){
-            for(int i=0;i<userBeanList.size();i++){
-                UserBean item=userBeanList.get(i);
-                if(TextUtils.equals(item.account,account)){
-                    if(TextUtils.equals(item.passWord,psd)){
-                        Utils.showToast((Context) mView,"登录成功");
-                        ((BaseActivity)mView).finish();
-
-                    }else{
-                        Utils.showToast((Context) mView,"账号或密码错误");
-
-                    }
-                    break;
-                }
-            }
-        }else{
-            Utils.showToast((Context) mView,"该账号未注册");
+        Map<String, String> map = new HashMap<>();
+        map.put("account", account);
+        map.put("psd", psd);
+        User user = mLoginCase.execute(map);
+        if (user != null) {
+            ((Activity) mView).finish();
+            Utils.showToast((Context) mView, user.toString());
+        } else {
+            Utils.showToast((Context) mView, "账号密码错误");
         }
 
     }
 
     @Override
     public void jumpToRegister(Context context) {
-        Utils.showToast(context, "注册");
+        RegisterActivity.action(context);
+    }
+
+    @Override
+    public Response logout(String uid) {
+        return mLogoutCase.execute(uid);
     }
 }

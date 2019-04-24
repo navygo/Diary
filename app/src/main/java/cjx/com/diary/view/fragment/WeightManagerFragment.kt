@@ -7,7 +7,9 @@ import android.view.ViewGroup
 import cjx.com.diary.R
 import cjx.com.diary.base.BaseFragment
 import cjx.com.diary.mode.weight.BodyWeightBean
-import cjx.com.diary.util.*
+import cjx.com.diary.util.DateUtils
+import cjx.com.diary.util.Utils
+import cjx.com.diary.util.WeightUtils
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -24,13 +26,15 @@ import kotlinx.android.synthetic.main.view_title_bar.*
  */
 class WeightManagerFragment : BaseFragment() {
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater!!.inflate(R.layout.frag_weight_manager, container, false)
         return view
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        if (view != null) {
+            super.onViewCreated(view, savedInstanceState)
+        }
         tv_title.text = "体重管理"
         tv_extend.text = "重置数据"
         iv_back.visibility = View.GONE

@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
-import com.chad.library.adapter.base.loadmore.LoadMoreView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,11 @@ import cjx.com.diary.base.BaseFragment;
 import cjx.com.diary.common.MyObserver;
 import cjx.com.diary.mode.BaiDuImageBean;
 import cjx.com.diary.util.ImageUtils;
-import cjx.com.diary.view.activity.ImageDetailActivity;
+import cjx.com.diary.util.Utils;
+import cjx.com.diary.util.miscreenshot.ScreenShotHelper;
 import cjx.com.diary.widget.CustomLoadMoreView;
 import cjx.com.diary.widget.SwipeRefreshRecyclerView;
+import cjx.com.diary.widget.imagedetail.ImageHelper;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -57,6 +58,8 @@ public class PhotoFragment extends BaseFragment {
     int curCount = 0;
     boolean isLoadMore = false;
 
+    private View scrollView;
+
     public static Fragment newInstance() {
         return new PhotoFragment();
     }
@@ -81,7 +84,6 @@ public class PhotoFragment extends BaseFragment {
             getData();
         });
         adapter = new MyAdapter(mList);
-        adapter.setOnItemClickListener((baseQuickAdapter, view1, i) -> ImageDetailActivity.action(mActivity, mList.get(i).abs, mList.get(i).image_url));
         adapter.openLoadAnimation(BaseQuickAdapter.ALPHAIN);
         adapter.setOnLoadMoreListener(() -> {
             mSwpRecycleView.setRefreshing(false);
@@ -111,6 +113,10 @@ public class PhotoFragment extends BaseFragment {
                             curCount = adapter.getData().size();
                             adapter.loadMoreComplete();
                         }
+                        View scrollView = ScreenShotHelper.getCanScrollView((ViewGroup) getView());
+                        if (scrollView != null) {
+                            Utils.logOut("滑动的View:" + scrollView.toString());
+                        }
                     }
 
                     @Override
@@ -129,6 +135,12 @@ public class PhotoFragment extends BaseFragment {
     private void initTitleBar() {
         mBackIv.setVisibility(View.GONE);
         mTitleTv.setText(R.string.title_photo);
+        mExtendTv.setVisibility(View.VISIBLE);
+        mExtendTv.setText("保存截图");
+        mExtendTv.setOnClickListener(v -> {
+            scrollView = ScreenShotHelper.getCanScrollView((ViewGroup) getView());
+            ScreenShotHelper.screenShot(mActivity, scrollView, (bitmap, filePath) -> mActivity.runOnUiThread(() -> Utils.showToast(mActivity,"保存成功！")));
+        });
     }
 
     private class MyAdapter extends BaseQuickAdapter<BaiDuImageBean.DataBean, BaseViewHolder> {
@@ -141,6 +153,7 @@ public class PhotoFragment extends BaseFragment {
             ImageView imageView = baseViewHolder.getView(R.id.iv_photo);
             ImageUtils.getInstance().displayImage(mActivity, imageView, imagesResult.thumbnail_url);
             baseViewHolder.setText(R.id.tv_name, imagesResult.abs);
+            baseViewHolder.itemView.setOnClickListener(v -> ImageHelper.goToImageDetail(mActivity, imageView, imagesResult.image_url));
         }
     }
 
